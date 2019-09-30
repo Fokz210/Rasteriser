@@ -1,12 +1,23 @@
+#include "context.hpp"
+#include "vector2.hpp"
 #include <iostream>
-#include <string>
+
+typedef vector2<float> vector2f;
 
 int main()
 {
-	std::string buffer;
+	context c;
 
-	std::cin >> buffer;
-	std::cout << "Hello, " << buffer << "!" << std::endl;
+	c.clear();
+
+	while (true) {
+
+		for (int y = 100; y < 400; y++)
+			for (int x = 300; x < 700; x++)
+				c[x][y] = {255, 255, 255, 255};
+
+		c.update();
+	}
 
 	return 0;
 }
