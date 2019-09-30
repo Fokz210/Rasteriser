@@ -56,8 +56,10 @@ void context::clear()
 
 void context::update()
 {
-	int framebuffer = ::open("/dev/fb0", O_WRONLY);
+	int framebuffer = open("/dev/fb0", O_WRONLY);
+
 	assert(framebuffer != -1);
-	::write(framebuffer, _fbc, _width * _height * sizeof(color));
-	::close(framebuffer);
+
+	write(framebuffer, _fbc, _width * _height * sizeof(color));
+	close(framebuffer);
 }
