@@ -5,6 +5,12 @@
 
 template<class T>
 struct vector2 {
+	vector2()
+		: x(),
+		  y()
+	{
+	}
+
 	vector2(T _x, T _y)
 		: x(_x),
 		  y(_y)

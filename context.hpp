@@ -1,3 +1,6 @@
+#ifndef CONTEXTHPP
+#define CONTEXTHPP
+
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
@@ -6,6 +9,14 @@ extern "C" {
 #include <fcntl.h>
 #include <unistd.h>
 }
+
+#ifndef CONTEXT_WIDTH
+#define CONTEXT_WIDTH 1920u
+#endif //CONTEXT_WIDTH
+
+#ifndef CONTEXT_HEIGHT
+#define CONTEXT_HEIGHT 1080u
+#endif //CONTEXT_HEIGHT
 
 struct color {
 	std::uint8_t b, g, r, a;
@@ -28,8 +39,8 @@ public:
 };
 
 context::context()
-	: _width(1920u),
-	  _height(1080u),
+	: _width(CONTEXT_WIDTH),
+	  _height(CONTEXT_HEIGHT),
 	  _fbc(static_cast<color *>(std::calloc(_width * _height, sizeof(color))))
 {
 }
@@ -63,3 +74,5 @@ void context::update()
 	write(framebuffer, _fbc, _width * _height * sizeof(color));
 	close(framebuffer);
 }
+
+#endif //CONTEXTHPP
