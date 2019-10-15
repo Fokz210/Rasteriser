@@ -17,6 +17,16 @@ struct vector2 {
 	{
 	}
 
+	T &operator[](int i)
+	{
+		return i ? y : x;
+	}
+
+	const T &operator[](int i) const
+	{
+		return i ? y : x;
+	}
+
 	T x, y;
 };
 
@@ -30,6 +40,12 @@ template<class T>
 vector2<T> operator-(const vector2<T> &v1, const vector2<T> &v2)
 {
 	return vector2<T>(v1.x - v2.x, v1.y - v2.y);
+}
+
+template<class T>
+T dot(const vector2<T> &v1, const vector2<T> &v2)
+{
+	return v1.x * v2.x + v1.y * v2.y;
 }
 
 template<class T>
