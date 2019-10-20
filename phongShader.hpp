@@ -15,7 +15,6 @@ public:
 
 	virtual color fragment(const Mesh::vertex &v0) override;
 
-protected:
 	vector3f light;
 	vector3f camPos;
 

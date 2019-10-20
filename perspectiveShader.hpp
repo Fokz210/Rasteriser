@@ -2,9 +2,7 @@
 
 #include "shader.hpp"
 
-class rotateShader : public vertexShader
-
-{
+class rotateShader : public vertexShader {
 public:
 	rotateShader(mat3f _matrix, vector3f _localPos, vector3f _cameraPos, float _screenRatio, float _c1, float _c2)
 		: vertexShader(),
@@ -19,9 +17,6 @@ public:
 
 	virtual vector4f vertex(const Mesh::vertex &v) override;
 
-	void setMatrix(const mat3f &mat);
-
-protected:
 	mat3f matrix;
 
 	vector3f localPos;
@@ -42,9 +37,4 @@ vector4f rotateShader::vertex(const Mesh::vertex &v)
 	p.w = r.z;
 
 	return p;
-}
-
-void rotateShader::setMatrix(const mat3f &mat)
-{
-	matrix = mat;
 }
