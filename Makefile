@@ -1,4 +1,4 @@
-FLAGS	:= -std=c++17 -ffast-math -Wall -Wextra -pedantic
+FLAGS	:= -std=c++17 -ffast-math -Wall -Wextra -pedantic -pthread
 LIBS	:= -lX11
 
 all:
@@ -9,3 +9,6 @@ debug:
 
 clean:
 	rm -f main
+
+test:
+	g++ -o test test.cpp -O3 -march=native $(FLAGS) $(LIBS)

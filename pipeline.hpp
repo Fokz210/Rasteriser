@@ -6,16 +6,18 @@
 #include "shader.hpp"
 #include "trirast.hpp"
 
+#include "threadpool.hpp"
+
 class pipeline {
 public:
-	pipeline(context *c_ptr, fragmentShader *frag_ptr, vertexShader *vert_ptr, TriangleRasterizer *rast_ptr, Mesh *mesh_ptr)
+	pipeline(context *c_ptr, fragmentShader *frag_ptr, vertexShader *vert_ptr, TriangleRasterizer *rast_ptr, Mesh *mesh_ptr, thread_pool *_pool)
 		: c(c_ptr),
 		  fShader(frag_ptr),
 		  vShader(vert_ptr),
 		  trRast(rast_ptr),
 		  mesh(mesh_ptr),
 		  depth(new float[c->_width * c->_height]),
-		  out()
+		  pool(_pool)
 	{
 	}
 
@@ -35,8 +37,9 @@ protected:
 	TriangleRasterizer *trRast;
 	Mesh *mesh;
 	float *depth;
+	thread_pool *pool;
 
-	std::vector<TriangleRasterizer::output> out;
+	std::mutex m;
 };
 
 void pipeline::run()
@@ -46,31 +49,42 @@ void pipeline::run()
 			depth[y * c->_width + x] = 1.f;
 
 	for (auto i = 0u; i < mesh->inds.size(); i += 3) {
-		Mesh::vertex const v[3] = {
-		mesh->verts[mesh->inds[i]],
-		mesh->verts[mesh->inds[i + 1]],
-		mesh->verts[mesh->inds[i + 2]]};
+		auto work = [&, i]() {
+			std::vector<TriangleRasterizer::output> out;
 
-		vector4f p[3] = {};
+			Mesh::vertex const v[3] = {
+			mesh->verts[mesh->inds[i]],
+			mesh->verts[mesh->inds[i + 1]],
+			mesh->verts[mesh->inds[i + 2]]};
 
-		for (int i = 0; i < 3; ++i)
-			p[i] = vShader->vertex(v[i]);
+			vector4f p[3] = {};
 
-		trRast->rasterize(p, out);
+			for (int i = 0; i < 3; ++i)
+				p[i] = vShader->vertex(v[i]);
 
-		for (TriangleRasterizer::output el : out) {
+			trRast->rasterize(p, out);
 
-			if (el.depth > depth[el.y * 1920 + el.x])
-				continue;
+			for (TriangleRasterizer::output el : out) {
+				if (el.depth > depth[el.y * 1920 + el.x])
+					continue;
 
-			depth[el.y * 1920 + el.x] = el.depth;
+				depth[el.y * 1920 + el.x] = el.depth;
 
-			Mesh::vertex v0 = mix(v, el.b, el.c);
+				Mesh::vertex v0 = mix(v, el.b, el.c);
 
-			(*c)[el.y][el.x] = fShader->fragment(v0);
-		}
+				color col = fShader->fragment(v0);
 
-		out.clear();
+				{
+					std::unique_lock<std::mutex> l(m);
+
+					(*c)[el.y][el.x] = col;
+				}
+			}
+
+			out.clear();
+		};
+
+		pool->queue(work);
 	}
 }
 

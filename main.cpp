@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 #include "mouse.hpp"
 #include "perspectiveShader.hpp"
@@ -37,7 +38,10 @@ int main(int argv, char **argc)
 
 	Mesh mesh = import_obj(argv > 1 ? argc[1] : "cat.obj");
 
-	pipeline pipe(&c, &fShader, &vShader, &trRast, &mesh);
+	thread_pool pool;
+	pool.start_threads(8);
+
+	pipeline pipe(&c, &fShader, &vShader, &trRast, &mesh, &pool);
 
 	bool closeWindow = false;
 
@@ -74,6 +78,9 @@ int main(int argv, char **argc)
 		c.clear();
 
 		pipe.run();
+
+		while (!pool.work.empty())
+			continue;
 
 		c.update();
 	}
