@@ -15,7 +15,7 @@ struct matrix {
 		return data[i];
 	}
 
-	T data[sizeX][sizeY];
+	T data[sizeY][sizeX];
 };
 
 typedef matrix<float, 3, 3> mat3f;
