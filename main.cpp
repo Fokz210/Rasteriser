@@ -1,13 +1,9 @@
-#include "colors.hpp"
-#include "context.hpp"
-#include "line.hpp"
-#include "matrix.hpp"
+#include <cmath>
+
 #include "mouse.hpp"
-#include "obj.hpp"
 #include "perspectiveShader.hpp"
 #include "phongShader.hpp"
 #include "pipeline.hpp"
-#include "trirast.hpp"
 
 int main(int argv, char **argc)
 {
