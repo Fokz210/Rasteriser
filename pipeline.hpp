@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 
 #include "context.hpp"
@@ -48,6 +49,8 @@ void pipeline::run()
 		for (auto x = 0u; x < c->_width; x++)
 			depth[y * c->_width + x] = 1.f;
 
+	std::condition_variable cv;
+
 	for (auto i = 0u; i < mesh->inds.size(); i += 3) {
 		auto work = [&, i]() {
 			std::vector<TriangleRasterizer::output> out;
@@ -76,16 +79,23 @@ void pipeline::run()
 
 				{
 					std::unique_lock<std::mutex> l(m);
-
 					(*c)[el.y][el.x] = col;
 				}
 			}
 
 			out.clear();
+
+			if (pool->work.empty())
+				cv.notify_one();
 		};
 
 		pool->queue(work);
 	}
+
+	std::mutex mut;
+	std::unique_lock<std::mutex> l(mut);
+
+	cv.wait(l);
 }
 
 Mesh::vertex pipeline::mix(Mesh::vertex const v[3], float const b, float const c)

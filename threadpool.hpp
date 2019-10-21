@@ -12,11 +12,9 @@ public:
 	}
 
 	template<class F, class R = std::result_of_t<F &()>>
-	std::future<R> queue(F &&f)
+	void queue(F &&f)
 	{
 		std::packaged_task<R()> p(std::forward<F>(f));
-
-		auto result = p.get_future();
 
 		{
 			std::unique_lock<std::mutex> l(m);
@@ -24,8 +22,6 @@ public:
 		}
 
 		v.notify_one();
-
-		return result;
 	}
 
 	void start_threads(std::size_t n)
@@ -50,12 +46,10 @@ public:
 	{
 		{
 			std::unique_lock<std::mutex> l(m);
-			for (auto i = 0u; i < done.size(); i++)
+			for (auto i = 0u; i < workers.size(); i++)
 				work.push_back({});
 		}
 		v.notify_all();
-
-		done.clear();
 	}
 
 	std::vector<std::thread> workers;
@@ -70,14 +64,16 @@ protected:
 		while (true) {
 			std::packaged_task<void()> f;
 			{
-				std::unique_lock<std::mutex> l(m);
+				{
+					std::unique_lock<std::mutex> l(m);
 
-				if (work.empty()) {
-					v.wait(l, [&] { return !work.empty(); });
+					if (work.empty()) {
+						v.wait(l, [&] { return !work.empty(); });
+					}
+
+					f = std::move(work.front());
+					work.pop_front();
 				}
-
-				f = std::move(work.front());
-				work.pop_front();
 
 				if (!f.valid())
 					return;

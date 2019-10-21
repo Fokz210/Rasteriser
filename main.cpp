@@ -79,10 +79,8 @@ int main(int argv, char **argc)
 
 		pipe.run();
 
-		while (!pool.work.empty())
-			continue;
-
 		c.update();
 	}
-	return 0;
+
+	pool.finish();
 }
