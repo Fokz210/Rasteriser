@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 #include "mouse.hpp"
 #include "perspectiveShader.hpp"
@@ -27,7 +28,7 @@ int main(int argv, char **argc)
 	vector3f light = normalize(vector3f(0.f, 1.f, 0.f));
 
 	rotateShader vShader(mat3f(), localPos, light, screenRatio, c1, c2);
-	phongShader fShader(light, {}, {1.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
+	phongShader fShader(light, {}, {0.2f, 0.2f, 1.f}, {1.f, 0.7f, 1.f});
 
 	int x = 0,
 	    y = 0;
@@ -37,7 +38,9 @@ int main(int argv, char **argc)
 
 	Mesh mesh = import_obj(argv > 1 ? argc[1] : "cat.obj");
 
-	pipeline pipe(&c, &fShader, &vShader, &trRast, &mesh);
+	thread_pool pool;
+
+	pipeline pipe(&c, &fShader, &vShader, &trRast, &mesh, &pool);
 
 	bool closeWindow = false;
 
@@ -77,5 +80,6 @@ int main(int argv, char **argc)
 
 		c.update();
 	}
-	return 0;
+
+	pool.finish();
 }
