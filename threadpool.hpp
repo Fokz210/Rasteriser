@@ -1,20 +1,21 @@
 #include <condition_variable>
 #include <deque>
+#include <functional>
 #include <future>
 #include <mutex>
-#include <thread>
 #include <vector>
 
 class thread_pool {
 public:
 	thread_pool()
+		: waiting(false)
 	{
 	}
 
 	template<class F, class R = std::result_of_t<F &()>>
 	void queue(F &&f)
 	{
-		std::packaged_task<R()> p(std::forward<F>(f));
+		std::function<R()> p = f;
 
 		{
 			std::unique_lock<std::mutex> l(m);
@@ -26,8 +27,9 @@ public:
 
 	void start_threads(std::size_t n)
 	{
-		for (std::size_t i = 0; i < n; i++)
-			done.push_back(std::async(std::launch::async, [this] { thread_task(); }));
+		for (std::size_t i = 0; i < n; i++) {
+			workers.emplace_back(std::move(std::thread([this] { thread_task(); })));
+		}
 	}
 
 	void abort()
@@ -50,22 +52,29 @@ public:
 				work.push_back({});
 		}
 		v.notify_all();
+
+		for (auto &&worker : workers)
+			worker.join();
+
+		workers.clear();
 	}
 
 	std::vector<std::thread> workers;
-	std::deque<std::packaged_task<void()>> work;
+	std::deque<std::function<void()>> work;
 	std::mutex m;
 	std::condition_variable v;
-	std::vector<std::future<void>> done;
+
+	bool waiting;
 
 protected:
 	void thread_task()
 	{
 		while (true) {
-			std::packaged_task<void()> f;
+			std::function<void()> f;
 			{
 				{
 					std::unique_lock<std::mutex> l(m);
+					waiting = false;
 
 					if (work.empty()) {
 						v.wait(l, [&] { return !work.empty(); });
@@ -75,7 +84,7 @@ protected:
 					work.pop_front();
 				}
 
-				if (!f.valid())
+				if (!f)
 					return;
 
 				f();

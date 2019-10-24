@@ -18,13 +18,15 @@ public:
 		  trRast(rast_ptr),
 		  mesh(mesh_ptr),
 		  depth(new float[c->_width * c->_height]),
-		  pool(_pool)
+		  pool(_pool),
+		  mutexes(new std::mutex[1080])
 	{
 	}
 
 	~pipeline()
 	{
 		delete[] depth;
+		delete[] mutexes;
 	}
 
 	virtual void run();
@@ -40,7 +42,7 @@ protected:
 	float *depth;
 	thread_pool *pool;
 
-	std::mutex m;
+	std::mutex *mutexes;
 };
 
 void pipeline::run()
@@ -49,53 +51,49 @@ void pipeline::run()
 		for (auto x = 0u; x < c->_width; x++)
 			depth[y * c->_width + x] = 1.f;
 
-	std::condition_variable cv;
+	pool->start_threads(8);
 
-	for (auto i = 0u; i < mesh->inds.size(); i += 3) {
-		auto work = [&, i]() {
-			std::vector<TriangleRasterizer::output> out;
+	int tasksNum = pool->workers.size() * 20;
 
-			Mesh::vertex const v[3] = {
-			mesh->verts[mesh->inds[i]],
-			mesh->verts[mesh->inds[i + 1]],
-			mesh->verts[mesh->inds[i + 2]]};
+	for (unsigned start = 0u; start < mesh->inds.size(); start += mesh->inds.size() / tasksNum) {
+		auto work = [&, start]() {
+			for (unsigned i = start * 3; i < start * 3 + mesh->inds.size() / tasksNum * 3 && i < mesh->inds.size() - 3; i += 3) {
+				std::vector<TriangleRasterizer::output> out;
 
-			vector4f p[3] = {};
+				Mesh::vertex const v[3] = {
+				mesh->verts[mesh->inds[i]],
+				mesh->verts[mesh->inds[i + 1]],
+				mesh->verts[mesh->inds[i + 2]]};
 
-			for (int i = 0; i < 3; ++i)
-				p[i] = vShader->vertex(v[i]);
+				vector4f p[3] = {};
 
-			trRast->rasterize(p, out);
+				for (int i = 0; i < 3; ++i)
+					p[i] = vShader->vertex(v[i]);
 
-			for (TriangleRasterizer::output el : out) {
-				if (el.depth > depth[el.y * 1920 + el.x])
-					continue;
+				trRast->rasterize(p, out);
 
-				depth[el.y * 1920 + el.x] = el.depth;
+				for (TriangleRasterizer::output el : out) {
+					if (el.depth > depth[el.y * 1920 + el.x])
+						continue;
 
-				Mesh::vertex v0 = mix(v, el.b, el.c);
+					Mesh::vertex v0 = mix(v, el.b, el.c);
 
-				color col = fShader->fragment(v0);
+					color col = fShader->fragment(v0);
 
-				{
-					std::unique_lock<std::mutex> l(m);
-					(*c)[el.y][el.x] = col;
+					{
+						std::unique_lock<std::mutex> l(mutexes[el.y]);
+						depth[el.y * 1920 + el.x] = el.depth;
+						(*c)[el.y][el.x] = col;
+					}
 				}
+
+				out.clear();
 			}
-
-			out.clear();
-
-			if (pool->work.empty())
-				cv.notify_one();
 		};
 
 		pool->queue(work);
 	}
-
-	std::mutex mut;
-	std::unique_lock<std::mutex> l(mut);
-
-	cv.wait(l);
+	pool->finish();
 }
 
 Mesh::vertex pipeline::mix(Mesh::vertex const v[3], float const b, float const c)
