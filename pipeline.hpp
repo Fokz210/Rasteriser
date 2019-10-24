@@ -57,7 +57,7 @@ void pipeline::run()
 
 	for (unsigned start = 0u; start < mesh->inds.size(); start += mesh->inds.size() / tasksNum) {
 		auto work = [&, start]() {
-			for (unsigned i = start * 3; i < start * 3 + mesh->inds.size() / tasksNum * 3 && i < mesh->inds.size() - 3; i += 3) {
+			for (unsigned i = start * 3; i < start * 3 + mesh->inds.size() / tasksNum * 3 && i < mesh->inds.size(); i += 3) {
 				std::vector<TriangleRasterizer::output> out;
 
 				Mesh::vertex const v[3] = {
