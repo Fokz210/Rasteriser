@@ -40,7 +40,7 @@ struct vector4 {
 
 	operator vector3<T>() const
 	{
-		return vector3<T>{x, y, z};
+        return vector3<T>{x / w, y / w, z / w};
 	}
 };
 

@@ -25,10 +25,10 @@ int main(int argv, char **argc)
 	float c2 = 2.f * near * far / (far - near);
 
 	vector3f localPos = {0.f, -1.f, 0.f};
-	vector3f light = normalize(vector3f(0.f, 1.f, 0.f));
+	vector3f light = normalize(vector3f(0.f, -1.f, 0.f));
 
 	rotateShader vShader(mat3f(), localPos, light, screenRatio, c1, c2);
-	phongShader fShader(light, {}, {0.2f, 0.2f, 1.f}, {1.f, 0.7f, 1.f});
+	phongShader fShader(light, {}, {0.1f, 0.8f, 1.f}, {0.7, 1.f, 1.f});
 
 	int x = 0,
 	    y = 0;
@@ -45,9 +45,10 @@ int main(int argv, char **argc)
 	bool closeWindow = false;
 
 	while (!closeWindow) {
+		x += 2.f;
 		while (ms.poll(event)) {
-			x += event.dx;
-			y += event.dy;
+			x += event.dx - 2.f;
+            y += event.dy;
 
 			if (event.right())
 				closeWindow = true;
@@ -65,10 +66,10 @@ int main(int argv, char **argc)
 
 		mat3f mat = rotate(direction, {0.f, 1.f, 0.f});
 
-		vector3f cameraPos = direction * 1.8f;
-		light = vector3f(0.f, 1.f, 0.f);
+		vector3f cameraPos = direction * 1.8;
+		light = normalize(vector3f(0.f, 5.f, 5.f));
 
-		fShader.light = light;
+		fShader.light = mat * light;
 		fShader.camPos = cameraPos;
 
 		vShader.cameraPos = cameraPos;

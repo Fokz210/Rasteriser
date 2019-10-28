@@ -15,6 +15,13 @@ struct matrix {
 		return data[i];
 	}
 
+	void fill(T d)
+	{
+		for (auto y = 0u; y < sizeY; y++)
+			for (auto x = 0u; y < sizeX; x++)
+				data[y][x] = d;
+	}
+
 	T data[sizeY][sizeX];
 };
 
@@ -32,6 +39,7 @@ vector3f operator*(const mat3f &m, const vector3f &v)
 	for (int i = 0; i < 3; ++i)
 		for (int j = 0; j < 3; ++j)
 			out[i] += m[i][j] * v[j];
+
 	return out;
 }
 

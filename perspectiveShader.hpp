@@ -29,11 +29,11 @@ vector4f rotateShader::vertex(const Mesh::vertex &v)
 {
 	vector3f r = matrix * (v.pos + localPos - cameraPos);
 
-	vector4f p;
+    vector4f p;
 
 	p.x = -r.x / screenRatio;
-	p.y = r.y;
-	p.z = c1 * r.z + c2;
+	p.y = -r.y;
+	p.z = (c1 * r.z + c2);
 	p.w = r.z;
 
 	return p;
