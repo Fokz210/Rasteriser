@@ -7,7 +7,11 @@ extern "C"
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 }
-class XWindow
+
+#include "context.hpp"
+
+class XWindow :
+        public context
 {
 public:
     ~XWindow();
@@ -15,16 +19,11 @@ public:
     XWindow(XWindow const &) = delete;
     XWindow(XWindow &&) = delete;
 
-    struct color
-    {
-        unsigned char b, g, r, a;
-    };
-
     int     width()         const noexcept;
     int     height()        const noexcept;
 
-    void    update()              noexcept;
-    void    clear()               noexcept;
+    virtual void    update()              noexcept override;
+    virtual void    clear()               noexcept override;
 
     color       *memory()                    noexcept;
     color       *operator[](int const)       noexcept;
@@ -32,27 +31,18 @@ public:
 
 private:
     Display    *display;
+    XImage     *image;
     int         screen;
     Window      window;
-    int         w;
-    int         h;
     GC          gc;
-    XImage     *image;
-    color      *pixels;
 };
 
-inline int      XWindow::width() const noexcept {return w;}
-inline int      XWindow::height() const noexcept {return h;}
-inline void     XWindow::update() noexcept {XPutImage(display, window, gc, image, 0, 0, 0, 0, w, h);}
-inline void     XWindow::clear() noexcept {std::wmemset(reinterpret_cast<wchar_t *>(pixels), 0xff000000, w * h);}
-inline typename XWindow::color *XWindow::memory() noexcept {return pixels;}
-inline typename XWindow::color *XWindow::operator[](int const i) noexcept {return pixels + (h - i - 1) * w;}
-inline typename XWindow::color const *XWindow::operator[](int const i) const noexcept {return pixels + (h - i - 1) * w;}
+inline void     XWindow::update() noexcept {XPutImage(display, window, gc, image, 0, 0, 0, 0, static_cast<unsigned>(_width), static_cast<unsigned>(_height));}
 
 inline XWindow::XWindow()
 {
     display = XOpenDisplay(getenv("DISPLAY"));
-    if(display == NULL)
+    if(display == nullptr)
         throw std::runtime_error("could not open x11 display");
     screen = DefaultScreen(display);
     window = XCreateSimpleWindow
@@ -71,9 +61,9 @@ inline XWindow::XWindow()
     Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", true);
     XChangeProperty(display, window, wm_state, XA_ATOM, 32, PropModeReplace, (unsigned char *)&wm_fullscreen, 1);
 
-    w = XWidthOfScreen (ScreenOfDisplay(display, screen));
-    h = XHeightOfScreen(ScreenOfDisplay(display, screen));
-    pixels = static_cast<color *>(std::calloc(w * h, sizeof(color)));
+    _width = XWidthOfScreen (ScreenOfDisplay(display, screen));
+    _height = XHeightOfScreen(ScreenOfDisplay(display, screen));
+    _fbc = static_cast<color *>(std::calloc(_width * _height, sizeof(color)));
 
     gc = XCreateGC(display, window, 0, 0);
 
@@ -85,9 +75,9 @@ inline XWindow::XWindow()
         DefaultDepth(display, screen),
         ZPixmap,
         0,
-        reinterpret_cast<char *>(pixels),
-        w,
-        h,
+        reinterpret_cast<char *>(_fbc),
+        _width,
+        _height,
         32,
         0
     );
@@ -107,6 +97,7 @@ inline XWindow::XWindow()
     XFreeCursor(display, invisibleCursor);
     XFreePixmap(display, bitmapNoData);
 }
+
 inline XWindow::~XWindow()
 {
     XDestroyImage(image);

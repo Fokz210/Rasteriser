@@ -18,8 +18,10 @@ rasterizer.files
 rasterizer.includes
 rect.hpp
 shader.hpp
+sse_vector4f.hpp
 threadpool.hpp
 trirast.hpp
 vector2.hpp
 vector3.hpp
 vector4.hpp
+xwindow.hpp

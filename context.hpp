@@ -10,39 +10,46 @@ extern "C" {
 #include <unistd.h>
 }
 
-#ifndef CONTEXT_WIDTH
-#define CONTEXT_WIDTH 1920u
-#endif //CONTEXT_WIDTH
-
-#ifndef CONTEXT_HEIGHT
-#define CONTEXT_HEIGHT 1080u
-#endif //CONTEXT_HEIGHT
-
 struct color {
 	std::uint8_t b, g, r, a;
 };
 
 class context {
 public:
-	context();
-	~context();
+                           context();
+                           context(int width, int height);
+    virtual               ~context();
+                           context(const context & )               = delete;
+                           context(      context &&)               = delete;
 
-	color *operator[](const std::uint32_t y);
-	const color *operator[](const std::uint32_t y) const;
+                   color * operator[](const int y)       noexcept;
+             const color * operator[](const int y) const noexcept;
 
-	void clear();
-	void update();
+                   float   width()                           const noexcept;
+                   float   height()                          const noexcept;
+    virtual        void    clear()                                 noexcept;
+    virtual        void    update()                                noexcept;
 
-	const std::uint32_t _width;
-	const std::uint32_t _height;
-	color *_fbc;
+protected:
+
+    const    int _width;
+    const    int _height;
+             color *       _fbc;
 };
 
 context::context()
-	: _width(CONTEXT_WIDTH),
-	  _height(CONTEXT_HEIGHT),
-	  _fbc(static_cast<color *>(std::calloc(_width * _height, sizeof(color))))
+    : _width(1920),
+      _height(1080),
+      _fbc(static_cast<color *>(std::calloc(static_cast<size_t>(_width * _height), sizeof(color))))
 {
+}
+
+context::context (int width, int height)
+    : _width (width),
+      _height (height),
+      _fbc(static_cast<color*>(std::calloc (static_cast<size_t>(_width * _height), sizeof(color))))
+{
+
 }
 
 context::~context()
@@ -50,29 +57,40 @@ context::~context()
 	std::free(_fbc);
 }
 
-color *context::operator[](std::uint32_t y)
+color *context::operator[](int y) noexcept
 {
 	return _fbc + _width * (_height - y - 1);
 }
 
-const color *context::operator[](std::uint32_t y) const
+inline const color *context::operator[](int y) const noexcept
 {
 	return _fbc + _width * (_height - y - 1);
 }
 
-void context::clear()
+inline void context::clear() noexcept
 {
-	std::wmemset(reinterpret_cast<wchar_t *>(_fbc), 0xff000000, _width * _height);
+    std::wmemset(reinterpret_cast<wchar_t *>(_fbc), static_cast<wchar_t>(0xff000000), static_cast<size_t>(_width * _height));
 }
 
-void context::update()
+inline void context::update() noexcept
 {
 	int framebuffer = open("/dev/fb0", O_WRONLY);
 
 	assert(framebuffer != -1);
 
-	write(framebuffer, _fbc, _width * _height * sizeof(color));
+    write(framebuffer, _fbc, static_cast<size_t>(_width * _height) * sizeof(color));
 	close(framebuffer);
 }
+
+inline float context::width() const noexcept
+{
+    return _width;
+}
+
+inline float context::height() const noexcept
+{
+    return _height;
+}
+
 
 #endif //CONTEXTHPP

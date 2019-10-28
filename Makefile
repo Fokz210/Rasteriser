@@ -1,4 +1,4 @@
-FLAGS	:= -std=c++17 -ffast-math -Wall -Wextra -pedantic -pthread
+FLAGS	:= -std=c++17 -ffast-math -Wall -Wextra -pedantic -pthread -msse4.1
 LIBS	:= -lX11
 
 all:
