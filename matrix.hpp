@@ -2,6 +2,7 @@
 #define MATRIX3HPP
 
 #include "geometry.hpp"
+#include "sse_vector4f.hpp"
 
 template<class T, int sizeX, int sizeY>
 struct matrix {
@@ -29,15 +30,18 @@ typedef matrix<float, 3, 3> mat3f;
 
 vector3f normalize(const vector3f &v)
 {
-	float const len = length(v);
-	return vector3f{v.x / len, v.y / len, v.z / len};
+    sse_vector4f sv(v.x, v.y, v.z, 0);
+    sv = sv.norm ();
+
+    return vector3f{sv.x, sv.y, sv.z};
+
 }
 
 vector3f operator*(const mat3f &m, const vector3f &v)
 {
 	vector3f out = {0.f, 0.f, 0.f};
 	for (int i = 0; i < 3; ++i)
-		for (int j = 0; j < 3; ++j)
+        for (int j = 0; j < 3; ++j)
 			out[i] += m[i][j] * v[j];
 
 	return out;

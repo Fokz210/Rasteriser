@@ -11,7 +11,7 @@ public:
 	{
 	}
 
-	virtual vector4f vertex(const Mesh::vertex &v) = 0;
+    virtual vector4f vertex(const Mesh::vertex &v) = 0;
 };
 
 class fragmentShader {

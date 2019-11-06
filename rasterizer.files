@@ -1,8 +1,10 @@
 Makefile
+aligning_malloctor.hpp
 cat.obj
 colors.hpp
 context.hpp
 geometry.hpp
+kb_kernel_module.c
 line.hpp
 main.cpp
 matrix.hpp
@@ -19,6 +21,7 @@ rasterizer.includes
 rect.hpp
 shader.hpp
 sse_vector4f.hpp
+texture.hpp
 threadpool.hpp
 trirast.hpp
 vector2.hpp

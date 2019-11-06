@@ -9,7 +9,7 @@
 class sse_vector4f
 {
 public:
-                                sse_vector4f(float x, float y, float z, float w)                        ;
+                                sse_vector4f(float _x, float _y, float _z, float _w)                    ;
                                 sse_vector4f(__m128 vector)                                             ;
                                 sse_vector4f()                                                          ;
                                 sse_vector4f(const sse_vector4f &  other)                               ;
@@ -19,17 +19,7 @@ public:
                  sse_vector4f & operator =(      sse_vector4f && other)                        noexcept ;
 
                  void           swap (sse_vector4f & other)                                    noexcept ;
-
-                 void           x(const float & val)                                           noexcept ;
-                 void           y(const float & val)                                           noexcept ;
-                 void           z(const float & val)                                           noexcept ;
-                 void           w(const float & val)                                           noexcept ;
-
-                 float          x()                                                      const noexcept ;
-                 float          y()                                                      const noexcept ;
-                 float          z()                                                      const noexcept ;
-                 float          w()                                                      const noexcept ;
-
+                 
                  float          length()                                                 const noexcept ;
                  sse_vector4f   norm()                                                   const          ;
                  sse_vector4f   perspective()                                            const          ;
@@ -56,9 +46,17 @@ public:
            const float &        operator[] (size_t i)                                    const          ;
 
                  void           dump ()                                                  const noexcept ;
-
-    private:
-                 __m128         data                                                                    ;
+                 
+              
+           union 
+           {
+                 __m128 data;
+                 float arr[4];
+                 struct
+                 {
+                    float x, y, z, w;
+                 };
+           };
 };
 
 sse_vector4f dot   (const sse_vector4f & v1, const sse_vector4f & v2) noexcept;
@@ -72,8 +70,8 @@ sse_vector4f::sse_vector4f()
 
 }
 
-sse_vector4f::sse_vector4f(float x, float y, float z, float w)
-    : data(_mm_set_ps (w, z, y, x))
+sse_vector4f::sse_vector4f(float _x, float _y, float _z, float _w)
+    : data(_mm_set_ps (_w, _z, _y, _x))
 {
 
 }
@@ -94,49 +92,9 @@ sse_vector4f::sse_vector4f(sse_vector4f && other)
     other.swap(*this);
 }
 
-inline void sse_vector4f::x (const float & val) noexcept
-{
-    (*this)[0] = val;
-}
-
-inline void sse_vector4f::y (const float & val) noexcept
-{
-    (*this)[1] = val;
-}
-
-inline void sse_vector4f::z (const float & val) noexcept
-{
-    (*this)[2] = val;
-}
-
-inline void sse_vector4f::w (const float & val) noexcept
-{
-    (*this)[3] = val;
-}
-
-inline float sse_vector4f::x () const noexcept
-{
-    return (*this)[0];
-}
-
-inline float sse_vector4f::y () const noexcept
-{
-    return (*this)[1];
-}
-
-inline float sse_vector4f::z () const noexcept
-{
-    return (*this)[2];
-}
-
-inline float sse_vector4f::w () const noexcept
-{
-    return (*this)[3];
-}
-
 inline float sse_vector4f::length() const noexcept
 {
-    return sqrtf (dot (*this, *this).x ());
+    return sqrtf (dot (*this, *this).x);
 }
 
 inline sse_vector4f sse_vector4f::norm() const
@@ -146,7 +104,7 @@ inline sse_vector4f sse_vector4f::norm() const
 
 inline sse_vector4f sse_vector4f::perspective() const
 {
-    return *this / w();
+    return *this / w;
 }
 
 inline sse_vector4f & sse_vector4f::operator=(const sse_vector4f & other) noexcept
@@ -223,18 +181,12 @@ inline sse_vector4f & sse_vector4f::operator= (__m128 && vec) noexcept
 
 inline float & sse_vector4f::operator[](size_t i)
 {
-    if (i > 3)
-        throw std::runtime_error ("vector subscript out of range.");
-
-    return reinterpret_cast<float*>(&data)[i];
+    return arr[i];
 }
 
 inline const float & sse_vector4f::operator[](size_t i) const
 {
-    if (i > 3)
-        throw std::runtime_error ("vector subscript out of range.");
-
-    return reinterpret_cast<const float*>(&data)[i];
+    return arr[i];
 }
 
 inline sse_vector4f dot (const sse_vector4f & v1, const sse_vector4f & v2) noexcept
@@ -254,7 +206,7 @@ inline sse_vector4f cross (const sse_vector4f & v1, const sse_vector4f & v2) noe
 
 inline void sse_vector4f::dump () const noexcept
 {
-    printf ("[%3.f %3.f %3.f %3.f  ]\n", static_cast<double>(x()), static_cast<double>(y()), static_cast<double>(z()), static_cast<double>(w()));
+    printf ("[%3.f %3.f %3.f %3.f  ]\n", static_cast<double>(x), static_cast<double>(y), static_cast<double>(z), static_cast<double>(w));
 }
 
 #endif // AVX_VECTOR4F_HPP

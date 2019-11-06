@@ -11,19 +11,19 @@ extern "C" {
 }
 
 struct color {
-	std::uint8_t b, g, r, a;
+    std::uint8_t b, g, r, a;
 };
 
 class context {
 public:
                            context();
-                           context(int width, int height);
+                           context(unsigned width, unsigned height);
     virtual               ~context();
                            context(const context & )               = delete;
                            context(      context &&)               = delete;
 
-                   color * operator[](const int y)       noexcept;
-             const color * operator[](const int y) const noexcept;
+                   color * operator[](unsigned y)                  noexcept;
+             const color * operator[](unsigned y)            const noexcept;
 
                    float   width()                           const noexcept;
                    float   height()                          const noexcept;
@@ -32,9 +32,9 @@ public:
 
 protected:
 
-    const    int _width;
-    const    int _height;
-             color *       _fbc;
+                   unsigned _width;
+                   unsigned _height;
+                   color *  _fbc;
 };
 
 context::context()
@@ -44,7 +44,7 @@ context::context()
 {
 }
 
-context::context (int width, int height)
+context::context (unsigned width, unsigned height)
     : _width (width),
       _height (height),
       _fbc(static_cast<color*>(std::calloc (static_cast<size_t>(_width * _height), sizeof(color))))
@@ -57,12 +57,12 @@ context::~context()
 	std::free(_fbc);
 }
 
-color *context::operator[](int y) noexcept
+color *context::operator[](unsigned y) noexcept
 {
 	return _fbc + _width * (_height - y - 1);
 }
 
-inline const color *context::operator[](int y) const noexcept
+inline const color *context::operator[](unsigned y) const noexcept
 {
 	return _fbc + _width * (_height - y - 1);
 }

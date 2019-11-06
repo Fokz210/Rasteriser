@@ -8,14 +8,14 @@
 
 struct Mesh {
 	struct vertex {
-		vector3f pos;
-		vector2f tex;
-		vector3f norm;
+        vector3f pos;
+        vector2f tex;
+        vector3f norm;
 	};
 
 	using uint = unsigned;
-	std::vector<vertex> verts;
-	std::vector<uint> inds;
+    std::vector<vertex> verts;
+    std::vector<uint> inds;
 };
 
 inline Mesh import_obj(char const *filename)
@@ -24,27 +24,27 @@ inline Mesh import_obj(char const *filename)
 	Mesh out;
 	if (!in.is_open())
 		throw std::invalid_argument("can not find file " + std::string(filename));
-	std::string line;
-	std::vector<vector3f> pos;
-	std::vector<vector2f> tex;
-	std::vector<vector3f> norm;
-	while (std::getline(in, line)) {
+    std::string line;
+    std::vector<vector3f> pos;
+    std::vector<vector2f> tex;
+    std::vector<vector3f> norm;
+    while (std::getline(in, line)) {
 		std::istringstream iss(line);
 		std::string word;
 		iss >> word;
 		if (word == "v") {
-			vector3f v;
+            vector3f v;
 			if (!(iss >> v.x >> v.y >> v.z))
 				throw std::runtime_error("could not parse line: " + line);
 			pos.push_back(v);
 		} else if (word == "vt") {
-			vector2f v;
+            vector2f v;
 			if (!(iss >> v.x >> v.y))
 				throw std::runtime_error("could not parse line: " + line);
 			tex.push_back(v);
 		} else if (word == "vn") {
-			vector3f v;
-			if (!(iss >> v.x >> v.y >> v.z))
+            vector3f v;
+            if (!(iss >> v.x >> v.y >> v.z))
 				throw std::runtime_error("could not parse line: " + line);
 			norm.push_back(v);
 		} else if (word == "f") {

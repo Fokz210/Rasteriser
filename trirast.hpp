@@ -8,7 +8,7 @@ class TriangleRasterizer {
 	float w_2, h_2;
 
 protected:
-	int float_to_x(float const fx) const noexcept
+    int float_to_x(float const fx) const noexcept
 	{
 		return std::lround((fx + 1.f) * w_2 + x0);
 	}
@@ -42,19 +42,20 @@ public:
 		float c;
 	};
 
-	void rasterize(vector4f const p[3], std::vector<output> &out) noexcept
+    void rasterize(vector4f  const p[3], std::vector<output> &out) noexcept
 	{
 		if (p[0].w > 0.f || p[1].w > 0.f || p[2].w > 0.f)
 			return;
 
-		vector3f const v[3] = {p[0], p[1], p[2]};
+        vector3f const v[3] = {p[0], p[1], p[2]};
+        
 		float const dx1 = v[1].x - v[0].x;
 		float const dx2 = v[2].x - v[0].x;
 		float const dy1 = v[1].y - v[0].y;
 		float const dy2 = v[2].y - v[0].y;
 		float const det = dx1 * dy2 - dy1 * dx2;
 
-		auto const clamp = [](float const x) {float const eps = 1e-6; return x >= 1.f ? 1.f - eps : (x <= -1.f ? -1.f + eps : x); };
+		auto const clamp = [](float const x) {float const eps = 1e-6f; return x >= 1.f ? 1.f - eps : (x <= -1.f ? -1.f + eps : x); };
 
 		int const xmin = float_to_x(clamp(std::min(std::min(v[0].x, v[1].x), v[2].x)));
 		int const xmax = float_to_x(clamp(std::max(std::max(v[0].x, v[1].x), v[2].x)));

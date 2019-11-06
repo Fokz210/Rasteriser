@@ -14,32 +14,28 @@ class XWindow :
         public context
 {
 public:
-    ~XWindow();
-    XWindow();
-    XWindow(XWindow const &) = delete;
-    XWindow(XWindow &&) = delete;
+     virtual          ~XWindow()                               override;
+                      XWindow();
+                      XWindow(XWindow const &) = delete;
+                      XWindow(XWindow &&)      = delete;
 
-    int     width()         const noexcept;
-    int     height()        const noexcept;
+    virtual void      update()                 noexcept override;
+    virtual void      clear()                  noexcept override;
 
-    virtual void    update()              noexcept override;
-    virtual void    clear()               noexcept override;
-
-    color       *memory()                    noexcept;
-    color       *operator[](int const)       noexcept;
-    color const *operator[](int const) const noexcept;
+            Display * getDisplay()             noexcept;
 
 private:
-    Display    *display;
-    XImage     *image;
-    int         screen;
-    Window      window;
-    GC          gc;
+    Display          *display;
+    XImage           *image;
+    int               screen;
+    Window            window;
+    GC                gc;
 };
 
-inline void     XWindow::update() noexcept {XPutImage(display, window, gc, image, 0, 0, 0, 0, static_cast<unsigned>(_width), static_cast<unsigned>(_height));}
+inline void  XWindow::update() noexcept {XPutImage(display, window, gc, image, 0, 0, 0, 0, static_cast<unsigned>(_width), static_cast<unsigned>(_height));}
 
 inline XWindow::XWindow()
+    : context()
 {
     display = XOpenDisplay(getenv("DISPLAY"));
     if(display == nullptr)
@@ -59,20 +55,20 @@ inline XWindow::XWindow()
         );
     Atom wm_state      = XInternAtom(display, "_NET_WM_STATE",            true);
     Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", true);
-    XChangeProperty(display, window, wm_state, XA_ATOM, 32, PropModeReplace, (unsigned char *)&wm_fullscreen, 1);
+    XChangeProperty(display, window, wm_state, XA_ATOM, 32, PropModeReplace, reinterpret_cast<unsigned char *>(&wm_fullscreen), 1);
 
-    _width = XWidthOfScreen (ScreenOfDisplay(display, screen));
-    _height = XHeightOfScreen(ScreenOfDisplay(display, screen));
-    _fbc = static_cast<color *>(std::calloc(_width * _height, sizeof(color)));
+    _width = static_cast<unsigned>(XWidthOfScreen (ScreenOfDisplay(display, screen)));
+    _height = static_cast<unsigned>(XHeightOfScreen(ScreenOfDisplay(display, screen)));
+    _fbc = static_cast<color *>(std::calloc(static_cast<size_t>(_width * _height), sizeof(color)));
 
-    gc = XCreateGC(display, window, 0, 0);
+    gc = XCreateGC(display, window, 0, nullptr);
 
     XSelectInput(display, window, ExposureMask | ButtonPressMask | KeyPressMask);
     image = XCreateImage
     (
         display,
         DefaultVisual(display, screen),
-        DefaultDepth(display, screen),
+        static_cast<unsigned> (DefaultDepth(display, screen)),
         ZPixmap,
         0,
         reinterpret_cast<char *>(_fbc),
@@ -104,4 +100,14 @@ inline XWindow::~XWindow()
     XFreeGC(display, gc);
     XDestroyWindow(display, window);
     XCloseDisplay(display);
+}
+
+inline void XWindow::clear() noexcept
+{
+    context::clear();
+}
+
+inline Display* XWindow::getDisplay () noexcept
+{
+    return display;
 }
