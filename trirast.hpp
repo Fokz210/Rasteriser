@@ -44,8 +44,8 @@ public:
 
     void rasterize(vector4f  const p[3], std::vector<output> &out) noexcept
 	{
-		if (p[0].w > 0.f || p[1].w > 0.f || p[2].w > 0.f)
-			return;
+        if (p[0].w > 0.f || p[1].w > 0.f || p[2].w > 0.f)
+            return;
 
         vector3f const v[3] = {p[0], p[1], p[2]};
         

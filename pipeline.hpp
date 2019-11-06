@@ -20,7 +20,9 @@ public:
           trRast(rast_ptr),
           depth(new float[static_cast<size_t>(c->width() * c->height())]),
           pool(),
-		  mutexes(new std::mutex[1080])
+          mutexes(new std::mutex[1080]),
+          camPos(),
+          faces_out (true)
 	{
 	}
 
@@ -32,6 +34,9 @@ public:
 
     virtual void run(const Mesh & mesh);
 
+    vector3f camPos;
+    vector3f localPos;
+    bool faces_out;
 protected:
 	Mesh::vertex mix(Mesh::vertex const v[3], float const b, float const c);
 
@@ -77,6 +82,9 @@ void pipeline::run(const Mesh & mesh)
                         continue;
 
 					Mesh::vertex v0 = mix(v, el.b, el.c);
+
+                    if ((faces_out ? 1 : -1) * dot (v0.norm, camPos - localPos - v0.pos) < 0)
+                        continue;
 
 					color col = fShader->fragment(v0);
 					{

@@ -9,7 +9,7 @@
 #include "pipeline.hpp"
 #include "xwindow.hpp"
 
-#include "texture.hpp"
+#include "texShader.hpp"
 
 int main(int argv, char **argc)
 {
@@ -29,20 +29,25 @@ int main(int argv, char **argc)
 	std::vector<TriangleRasterizer::output> out;
 
     float screenRatio = static_cast<float>(c->width()) / c->height();
-	float near = 0.2f;
-	float far = 5.f;
+    float near = 0.2f;
+    float far = 100000.f;
 
 	float c1 = (far + near) / (far - near);
 	float c2 = 2.f * near * far / (far - near);
 
     vector3f localPos = {0.f, -1.f, 0.f};
-    vector3f light = normalize(vector3f(0.f, -1.f, 0.f));
+    vector3f light = normalize(vector3f(-0.2f, 0.f, 1.f));
 
-    texture tex;
-    tex.readPPM ("texture.ppm");
+    texture sky;
+    sky.readPPM ("sky/sky.ppm");
 
-	rotateShader vShader(mat3f(), localPos, light, screenRatio, c1, c2);
-    phongShader fShader(light, {}, {0.1f, 0.8f, 1.f}, {0.7f, 1.f, 1.f}, &tex);
+    texture A6M;
+    A6M.readPPM ("A6M/A6M.ppm");
+
+    rotateShader vShader(mat3f(), localPos, light, screenRatio, c1, c2);
+
+    phongShader fShader(light, {}, {0.1f, 0.8f, 1.f}, {0.7f, 1.f, 1.f}, &A6M);
+    texShader tfShader(&sky);
 
     int x = 0,
 	    y = 0;
@@ -50,11 +55,24 @@ int main(int argv, char **argc)
 	mouse ms;
 	mouse::event event;
 
-    Mesh mesh = import_obj("cat.obj");
+    Mesh sky_mesh = import_obj("sky/sky.obj");
+    Mesh A6M_mesh = import_obj("A6M/A6M.obj");
+
+
+    for (auto && el : sky_mesh.verts)
+    {
+        el.pos = el.pos * 100;
+    }
 
 	thread_pool pool;
 
-    pipeline pipe(c, &fShader, &vShader, &trRast);
+    pipeline skypipe(c, &tfShader, &vShader, &trRast);
+    pipeline a6mpipe(c, &fShader, &vShader, &trRast);
+
+    skypipe.localPos = localPos;
+    a6mpipe.localPos = localPos;
+
+    skypipe.faces_out = false;
 
 	bool closeWindow = false;
 
@@ -80,18 +98,22 @@ int main(int argv, char **argc)
 
         mat3f mat = rotate(direction, {0.f, 1.f, 0.f});
 
-        vector3f cameraPos = direction * 1.8f;
+        vector3f cameraPos = direction * 5.f;
         light = normalize(vector3f(0.f, 5.f, 5.f));
 
-		fShader.light = mat * light;
+        fShader.light = light;
 		fShader.camPos = cameraPos;
 
 		vShader.cameraPos = cameraPos;
 		vShader.matrix = mat;
 
+        skypipe.camPos = cameraPos;
+        a6mpipe.camPos = cameraPos;
+
         c->clear();
 
-        pipe.run(mesh);
+        skypipe.run(sky_mesh);
+        a6mpipe.run(A6M_mesh);
 
         c->update();
 	}

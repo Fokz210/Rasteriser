@@ -1,3 +1,5 @@
+A6M/A6M.obj
+A6M/A6M.ppm
 Makefile
 aligning_malloctor.hpp
 cat.obj
@@ -20,7 +22,11 @@ rasterizer.files
 rasterizer.includes
 rect.hpp
 shader.hpp
+sky/sky.mtl
+sky/sky.obj
+sky/sky.ppm
 sse_vector4f.hpp
+texShader.hpp
 texture.hpp
 threadpool.hpp
 trirast.hpp

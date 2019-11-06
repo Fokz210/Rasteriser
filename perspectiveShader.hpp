@@ -27,7 +27,7 @@ public:
 
 vector4f rotateShader::vertex(const Mesh::vertex &v)
 {
-    vector3f r = matrix * (v.pos + localPos - cameraPos);
+    vector3f r =  matrix * (v.pos + localPos - cameraPos);
 
     vector4f p;
 
