@@ -72,6 +72,7 @@ void pipeline::run(const Mesh & mesh)
 					color col = fShader->fragment(v0);
 					{
 						std::unique_lock<std::mutex> l(mutexes[el.y]);
+
                         c->zbuffer[el.y * 1920 + el.x] = el.depth;
                         (*c)[static_cast<unsigned>(el.y)][static_cast<unsigned>(el.x)] = col;
 					}

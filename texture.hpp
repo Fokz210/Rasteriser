@@ -52,7 +52,8 @@ public:
 texture::texture () :
     pixels (nullptr),
     sizeX (),
-    sizeY ()
+    sizeY (),
+	mutexes (nullptr)
 {
 
 }
@@ -100,7 +101,10 @@ void texture::loadPPM(const char * filename)
 
     char format[64] = "";
 
-    fscanf (file, "%9s ", format);
+    char format[16] = "";
+
+    fscanf_s (file, "%9s", format, 16);
+
 
     if (strcmp (format, "P6"))
         throw std::runtime_error("PPM reading error: file format not supported");
@@ -126,13 +130,11 @@ void texture::loadPPM(const char * filename)
     int sizex = 0, sizey = 0;
     int max = 0;
 
-
-    fscanf (file, "%d %d %d ", &sizex, &sizey, &max);
+    fscanf_s (file, "%d %d %d ", &sizex, &sizey, &max);
 
     create (static_cast<size_t>(sizex), static_cast<size_t>(sizey));
-    fread (reinterpret_cast<void*>(pixels), sizeof(pixels), static_cast<size_t>(sizex * sizey), file);
+    fread (pixels, sizeof(color), static_cast<size_t>(sizex * sizey), file);
 
-    fclose (file);
 }
 
 const texture::color * texture::getPixels() const
@@ -162,6 +164,7 @@ const texture::color * texture::operator[](unsigned int y) const noexcept
 
 vector3f texture::getPixel(const float & x, const float & y) noexcept
 {
+
     color col =  (*this)[static_cast<unsigned>(std::lround(y * sizeY)) % sizeY][static_cast<unsigned>(std::lround(x * sizeX)) % sizeX];
-    return vector3f(static_cast<float>(col.r) / 255, static_cast<float>(col.g) / 255, static_cast<float>(col.b) / 255);
+    return vector3f(static_cast<float>(col.b) / 255, static_cast<float>(col.r) / 255, static_cast<float>(col.g) / 255);
 }

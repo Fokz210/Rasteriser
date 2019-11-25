@@ -5,10 +5,13 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cwchar>
+
+#ifdef __unix
 extern "C" {
 #include <fcntl.h>
 #include <unistd.h>
 }
+#endif
 
 #include "texture.hpp"
 
@@ -27,8 +30,8 @@ public:
                    color * operator[](unsigned y)                  noexcept;
              const color * operator[](unsigned y)            const noexcept;
 
-                   float   width()                           const noexcept;
-                   float   height()                          const noexcept;
+                   unsigned  width()                           const noexcept;
+                   unsigned  height()                          const noexcept;
     virtual        void    clear()                                 noexcept;
     virtual        void    update()                                noexcept;
 
@@ -75,7 +78,7 @@ inline const color *context::operator[](unsigned y) const noexcept
 
 inline void context::clear() noexcept
 {
-    std::wmemset(reinterpret_cast<wchar_t *>(_fbc), static_cast<wchar_t>(0xff000000), static_cast<size_t>(_width * _height));
+    std::wmemset(reinterpret_cast<wchar_t *>(_fbc), static_cast<wchar_t>(0xff000000), static_cast<size_t>(_width * _height) * 2);
 
     for (auto y = 0u; y < _height; y++)
         for (auto x = 0u; x < _width; x++)
@@ -84,20 +87,22 @@ inline void context::clear() noexcept
 
 inline void context::update() noexcept
 {
+#ifdef __unix
 	int framebuffer = open("/dev/fb0", O_WRONLY);
 
 	assert(framebuffer != -1);
 
     write(framebuffer, _fbc, static_cast<size_t>(_width * _height) * sizeof(color));
 	close(framebuffer);
+#endif
 }
 
-inline float context::width() const noexcept
+inline unsigned context::width() const noexcept
 {
     return _width;
 }
 
-inline float context::height() const noexcept
+inline unsigned context::height() const noexcept
 {
     return _height;
 }

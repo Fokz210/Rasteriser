@@ -32,6 +32,8 @@ color texShader::fragment(const Mesh::vertex &v0)
     static_cast<uint8_t>(255 * cc.y),
     static_cast<uint8_t>(255)};
 
+	col = { 255, 255, 255, 255 };
+
     return col;
 }
 
