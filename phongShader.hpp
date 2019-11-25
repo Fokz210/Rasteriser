@@ -39,7 +39,7 @@ color phongShader::fragment(const Mesh::vertex &v0)
 	for (int i = 0; i < 4; i++)
         spec *= spec;
 
-    vector3f cc =  tex->getPixel (v0.tex.x, v0.tex.y) * (0.2f + 0.6f * NL) + lightColor * (0.4f * spec);
+    vector3f cc = tex->getPixel (v0.tex.x, v0.tex.y) * (0.2f + 0.6f * NL) + lightColor * (0.4f * spec);
 
 	color col = {
     static_cast<uint8_t>(255 * cc.x),

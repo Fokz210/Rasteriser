@@ -1,24 +1,17 @@
 #include <cmath>
 #include <iostream>
 
-#include <X11/XKBlib.h>
-
 #include "mouse.hpp"
 #include "perspectiveShader.hpp"
 #include "phongShader.hpp"
 #include "pipeline.hpp"
-#include "xwindow.hpp"
+#include "oscontext.hpp"
 
 #include "texShader.hpp"
 
 int main(int argv, char **argc)
 {
-    context * c = nullptr;
-
-    if (argv > 1 && !strcmp (argc[1], "--tty"))
-        c = new context;
-    else
-        c = new XWindow;
+    WindowContext * c = new WindowContext;
 
     c->clear();
 
@@ -49,7 +42,7 @@ int main(int argv, char **argc)
     phongShader fShader(light, {}, {0.1f, 0.8f, 1.f}, {0.7f, 1.f, 1.f}, &A6M);
     texShader tfShader(&sky);
 
-    int x = 0,
+    float x = 0,
 	    y = 0;
 
 	mouse ms;
@@ -74,17 +67,15 @@ int main(int argv, char **argc)
 
     skypipe.faces_out = false;
 
-	bool closeWindow = false;
-
-	while (!closeWindow) {
+	while (c->is_open()) {
 		x += 2.f;
-		while (ms.poll(event)) {
-			x += event.dx - 2.f;
-            y += event.dy;
+		/*while (ms.poll(event)) {
+			x += event.dx () - 2.f;
+            y += event.dy ();
 
-			if (event.right())
-				closeWindow = true;
-		}
+			if (event.right ())
+				c->close ();
+		}*/
 
 		float s = 0.005f;
 		float phi = s * x;
@@ -112,11 +103,13 @@ int main(int argv, char **argc)
 
         c->clear();
 
-        skypipe.run(sky_mesh);
+        //skypipe.run(sky_mesh);
         a6mpipe.run(A6M_mesh);
 
         c->update();
 	}
 
 	pool.finish();
+
+	return 0;
 }
