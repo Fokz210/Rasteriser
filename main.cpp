@@ -15,9 +15,14 @@ int main(int argv, char **argc)
 
     c->clear();
 
-	TriangleRasterizer trRast;
+    TriangleRasterizer skyRast;
+    TriangleRasterizer a6mRast;
 
-    trRast.set_viewport(0, 0, static_cast<int>(c->width()), static_cast<int>(c->height()));
+    skyRast.mode = TriangleRasterizer::faces_in;
+    a6mRast.mode = TriangleRasterizer::faces_out;
+
+    a6mRast.set_viewport(0, 0, static_cast<int>(c->width()), static_cast<int>(c->height()));
+    skyRast.set_viewport(0, 0, static_cast<int>(c->width()), static_cast<int>(c->height()));
 
 	std::vector<TriangleRasterizer::output> out;
 
@@ -28,14 +33,14 @@ int main(int argv, char **argc)
 	float c1 = (far + near) / (far - near);
 	float c2 = 2.f * near * far / (far - near);
 
-    vector3f localPos = {0.f, -1.f, 0.f};
+    vector3f localPos = {0.f, 0.f, 0.f};
     vector3f light = normalize(vector3f(-0.2f, 0.f, 1.f));
 
     texture sky;
-    sky.readPPM ("sky/sky.ppm");
+    sky.loadPPM ("sky/sky.ppm");
 
     texture A6M;
-    A6M.readPPM ("A6M/A6M.ppm");
+    A6M.loadPPM ("A6M/A6M.ppm");
 
     rotateShader vShader(mat3f(), localPos, light, screenRatio, c1, c2);
 
@@ -51,27 +56,23 @@ int main(int argv, char **argc)
     Mesh sky_mesh = import_obj("sky/sky.obj");
     Mesh A6M_mesh = import_obj("A6M/A6M.obj");
 
-
     for (auto && el : sky_mesh.verts)
     {
-        el.pos = el.pos * 100;
+        el.pos = el.pos * 1000;
     }
 
-	thread_pool pool;
+    pipeline skypipe(c, &tfShader, &vShader, &skyRast);
+    pipeline a6mpipe(c, &fShader, &vShader, &a6mRast);
 
-    pipeline skypipe(c, &tfShader, &vShader, &trRast);
-    pipeline a6mpipe(c, &fShader, &vShader, &trRast);
-
-    skypipe.localPos = localPos;
-    a6mpipe.localPos = localPos;
-
-    skypipe.faces_out = false;
+    skyRast.localPos = localPos;
+    a6mRast.localPos = localPos;
 
 	while (c->is_open()) {
 		x += 2.f;
 		/*while (ms.poll(event)) {
 			x += event.dx () - 2.f;
             y += event.dy ();
+
 
 			if (event.right ())
 				c->close ();
@@ -89,7 +90,7 @@ int main(int argv, char **argc)
 
         mat3f mat = rotate(direction, {0.f, 1.f, 0.f});
 
-        vector3f cameraPos = direction * 5.f;
+        vector3f cameraPos = direction * 20.f;
         light = normalize(vector3f(0.f, 5.f, 5.f));
 
         fShader.light = light;
@@ -98,8 +99,8 @@ int main(int argv, char **argc)
 		vShader.cameraPos = cameraPos;
 		vShader.matrix = mat;
 
-        skypipe.camPos = cameraPos;
-        a6mpipe.camPos = cameraPos;
+        a6mRast.camPos = cameraPos;
+        skyRast.camPos = cameraPos;
 
         c->clear();
 
@@ -109,7 +110,6 @@ int main(int argv, char **argc)
         c->update();
 	}
 
-	pool.finish();
 
 	return 0;
 }

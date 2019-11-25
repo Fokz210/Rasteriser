@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 
+
+
 struct Mesh {
 	struct vertex {
         vector3f pos;
@@ -62,6 +64,22 @@ inline Mesh import_obj(char const *filename)
 		}
 	}
 	return out;
+}
+
+Mesh::vertex mix(Mesh::vertex const v[3], float const b, float const c);
+
+Mesh::vertex mix(Mesh::vertex const v[3], float const b, float const c)
+{
+    float const a = 1.f - b - c;
+
+    Mesh::vertex out;
+    float *f = reinterpret_cast<float *>(&out);
+    float const *const f0 = reinterpret_cast<float const *>(v);
+    float const *const f1 = reinterpret_cast<float const *>(v + 1);
+    float const *const f2 = reinterpret_cast<float const *>(v + 2);
+    for (unsigned int i = 0u; i < sizeof(Mesh::vertex) / sizeof(float); ++i)
+        f[i] = a * f0[i] + b * f1[i] + c * f2[i];
+    return out;
 }
 
 #endif //OBJHPP

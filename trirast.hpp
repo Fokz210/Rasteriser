@@ -2,6 +2,7 @@
 #include "geometry.hpp"
 #include <cmath>
 #include <vector>
+#include "obj.hpp"
 
 class TriangleRasterizer {
 	float x0, y0;
@@ -26,6 +27,29 @@ protected:
 	}
 
 public:
+    enum facing_mode
+    {
+        none = 0,
+        faces_out = 1,
+        faces_in = -1
+    };
+
+    vector3f camPos;
+    vector3f localPos;
+
+    facing_mode mode;
+
+    TriangleRasterizer () :
+        x0 (),
+        y0 (),
+        w_2 (),
+        h_2 (),
+        camPos (),
+        localPos (),
+        mode (facing_mode::none)
+    {
+    }
+
 	void set_viewport(int x, int y, int w, int h) noexcept
 	{
 		x0 = x - 0.5f;
@@ -42,9 +66,14 @@ public:
 		float c;
 	};
 
-    void rasterize(vector4f  const p[3], std::vector<output> &out) noexcept
+    void rasterize(vector4f const p[3], const Mesh::vertex verts[3], std::vector<output> &out) noexcept
 	{
         if (p[0].w > 0.f || p[1].w > 0.f || p[2].w > 0.f)
+            return;
+
+        Mesh::vertex vert = mix (verts, 0.33f, 0.33f);
+
+        if (mode * dot (vert.norm, camPos - vert.pos) < 0)
             return;
 
         vector3f const v[3] = {p[0], p[1], p[2]};
@@ -66,7 +95,7 @@ public:
 			float const fy = y_to_float(y);
 			float const dy = fy - v[0].y;
 			for (int x = xmin; x <= xmax; ++x) {
-				float const fx = x_to_float(x);
+                float const fx = x_to_float(x);
 				float const dx = fx - v[0].x;
 
 				float const det1 = dx * dy2 - dy * dx2;
