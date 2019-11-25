@@ -32,7 +32,7 @@ vector4f rotateShader::vertex(const Mesh::vertex &v)
     vector4f p;
 
     p.x = -r.x / screenRatio;
-	p.y = -r.y;
+    p.y = -r.y;
 	p.z = (c1 * r.z + c2);
 	p.w = r.z;
 

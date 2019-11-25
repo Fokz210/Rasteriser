@@ -31,7 +31,7 @@ public:
           void      create (size_t sX, size_t sY);
           void      deallocate ();
           void      copy (const texture & other);
-          void      readPPM (const char * filename);
+          void      loadPPM (const char * filename);
 
     const color *   getPixels()                          const;
           size_t    getWidth()                           const noexcept;
@@ -94,26 +94,45 @@ void texture::copy (const texture & other)
     memcpy (reinterpret_cast<void*>(pixels), reinterpret_cast<void*>(other.pixels), sizeof(color) * sizeX * sizeY);
 }
 
-void texture::readPPM(const char * filename)
+void texture::loadPPM(const char * filename)
 {
     FILE * file = fopen (filename, "r");
 
-    PTRCHECK (file);
+    char format[64] = "";
 
-    char format[16] = "";
-
-    fscanf (file, "%9s", format);
+    fscanf (file, "%9s ", format);
 
     if (strcmp (format, "P6"))
         throw std::runtime_error("PPM reading error: file format not supported");
 
+    long int save = 0;
+
+    while (true)
+    {
+        save = ftell(file);
+
+        char test = 0;
+        fscanf (file, "%c", &test);
+
+        if (test == '#')
+            fscanf(file, "%[^\n]\n", format);
+        else
+        {
+            fseek (file, save, SEEK_SET);
+            break;
+        }
+    }
+
     int sizex = 0, sizey = 0;
     int max = 0;
+
 
     fscanf (file, "%d %d %d ", &sizex, &sizey, &max);
 
     create (static_cast<size_t>(sizex), static_cast<size_t>(sizey));
     fread (reinterpret_cast<void*>(pixels), sizeof(pixels), static_cast<size_t>(sizex * sizey), file);
+
+    fclose (file);
 }
 
 const texture::color * texture::getPixels() const

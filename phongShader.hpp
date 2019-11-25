@@ -43,8 +43,8 @@ color phongShader::fragment(const Mesh::vertex &v0)
 
 	color col = {
     static_cast<uint8_t>(255 * cc.x),
-    static_cast<uint8_t>(255 * cc.y),
     static_cast<uint8_t>(255 * cc.z),
+    static_cast<uint8_t>(255 * cc.y),
 	static_cast<uint8_t>(255)};
 
 	return col;
